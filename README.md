@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🛒 FreshMart — E-Commerce Web App
 ### Django + MySQL (XAMPP) + HTML/CSS/JS
 
@@ -125,6 +124,3 @@ Create one with:
 python manage.py createsuperuser
 ```
 From admin you can add/edit/delete products, categories, and view all orders.
-=======
-# E-commerce-web-application
->>>>>>> 7d8dfafed6e7b38bebe9116d44da83d05056a099
