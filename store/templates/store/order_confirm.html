@@ -1,0 +1,40 @@
+{% extends "store/base.html" %}
+{% block title %}Order Confirmed – Sri Lakshmi Ganapati Kirana{% endblock %}
+
+{% block content %}
+<div class="order-confirm">
+    <div class="confirm-card">
+        <div class="confirm-icon">✓</div>
+        <h2>Order Placed!</h2>
+        <p class="confirm-sub">Thank you for ordering at Sri Lakshmi Ganapati Kirana! 🎉</p>
+
+        {% if order %}
+        <div class="order-summary-box">
+            {# line items #}
+            {% for item in order.items.all %}
+            <div class="os-row">
+                <span>{{ item.product.name }} ({{ item.quantity }}×{{ item.unit_label }})</span>
+                <span>₹{{ item.line_total|floatformat:0 }}</span>
+            </div>
+            {% endfor %}
+
+            {# delivery row #}
+            <div class="os-row">
+                <span>Delivery</span>
+                <span>{% if order.delivery_charge > 0 %}₹{{ order.delivery_charge|floatformat:0 }}{% else %}Free{% endif %}</span>
+            </div>
+
+            {# total #}
+            <div class="os-row total">
+                <span>Total Charged</span>
+                <span>₹{{ order.total|floatformat:0 }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p style="color:#6b7f72; margin-bottom:24px;">No order details available.</p>
+        {% endif %}
+
+        <a href="{% url 'products' %}" class="back-shop-btn">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

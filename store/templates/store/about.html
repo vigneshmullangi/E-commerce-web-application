@@ -1,0 +1,68 @@
+{% extends "store/base.html" %}
+{% block title %}About – Sri Lakshmi Ganapati Kirana{% endblock %}
+
+{% block content %}
+{# ── Hero ── #}
+<div class="about-hero">
+    <h1>Sri Lakshmi Ganapati Kirana</h1>
+    <p>Bringing quality groceries and daily essentials to your doorstep since 2003. We believe everyone deserves fresh, affordable food.</p>
+</div>
+
+{# ── Stats ── #}
+<div class="about-stats">
+    <div class="stat-box">
+        <div class="stat-num">{{ total_customers }}+</div>
+        <div class="stat-label">Happy Customers</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">500+</div>
+        <div class="stat-label">Products Available</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">50+</div>
+        <div class="stat-label">Brands Partnered</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">5★</div>
+        <div class="stat-label">Average Rating</div>
+    </div>
+</div>
+
+{# ── Content ── #}
+<div class="about-content">
+    <h3>Our Story</h3>
+    <p>Sri Lakshmi Ganapati Kirana &amp; General started with a simple idea — making it easier for families to get quality groceries without the hassle of crowded markets. Founded in 2003, we set out to partner directly with local farmers and trusted brands to bring you the freshest produce and best-priced essentials.</p>
+
+    <h3>Our Mission</h3>
+    <p>We are committed to providing affordable, high-quality groceries with fast and reliable delivery. Every product on our platform is carefully sourced and quality-checked before it reaches your home.</p>
+
+    <h3>Why Choose Us?</h3>
+    <p>We offer a wide range of cooking oils, dry fruits, spices, rice, dairy, and more — all measured precisely by grams, kilograms, liters, or pieces as you need. Our flexible ordering makes it easy to buy exactly what you want, nothing more, nothing less.</p>
+
+    {# ── Location ── #}
+    <div class="about-box">
+        <div class="box-icon">📍</div>
+        <div>
+            <h4>Our Location</h4>
+            <p>
+                Sri Lakshmi Ganapati Kirana &amp; General<br/>
+                Opposite MRO office, Sarpavaram Junction<br/>
+                Kakinada – 533 005, Andhra Pradesh, India<br/>
+                <strong>Delivery zones:</strong> Kakinada &amp; surrounding areas
+            </p>
+        </div>
+    </div>
+
+    {# ── Total Customers ── #}
+    <div class="about-box highlight">
+        <div class="box-icon">👥</div>
+        <div>
+            <h4>Our Growing Community</h4>
+            <p>
+                We proudly serve over <strong>{{ total_customers }}+ customers</strong> across the region.
+                Join the Sri Lakshmi Ganapati Kirana family today and experience the difference — fresh quality, fair prices, and doorstep delivery!
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

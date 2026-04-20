@@ -1,0 +1,63 @@
+{% extends "store/base.html" %}
+{% block title %}Home – Sri Lakshmi Ganapati Kirana{% endblock %}
+
+{% block content %}
+{# show_nav is set in the view context – triggers navbar + cart drawer in base #}
+
+<div class="hero">
+    <div class="carousel-wrap">
+        <div class="carousel" id="carousel">
+
+            <div class="offer-card">
+                <div>
+                    <h2>Freedom oil</h2>
+                    <p>Mega Offer. today <strong>4pm - 5pm</strong> for 20% off!</p>
+                </div>
+                <div class="offer-badge">🔥 Limited Time</div>
+            </div>
+
+            <div class="offer-card">
+                <div>
+                    <h2>🥜 Dry Fruits Fest</h2>
+                    <p>Premium almonds, cashews & pistachios. Buy 500g get 100g absolutely free on all dry fruits!</p>
+                </div>
+                <div class="offer-badge">⭐ Best Seller</div>
+            </div>
+
+            <div class="offer-card">
+                <div>
+                    <h2>🫒 Millets</h2>
+                    <p>Switch to health this week.</p>
+                </div>
+                <div class="offer-badge">💎 Premium</div>
+            </div>
+
+            <div class="offer-card">
+                <div>
+                    <h2>🍚 Rice & Grains</h2>
+                    <p>Basmati, brown rice & quinoa — stock up your pantry. Free delivery on orders above ₹500!</p>
+                </div>
+                <div class="offer-badge">📦 Free Delivery</div>
+            </div>
+
+            <div class="offer-card">
+                <div>
+                    <h2>🧈 Chilli powder Deals</h2>
+                    <p>save an extra 15% every order!</p>
+                </div>
+                <div class="offer-badge">💰 Save More</div>
+            </div>
+
+        </div>
+    </div>
+    <div class="carousel-dots" id="carousel-dots"></div>
+</div>
+
+<div class="content-area">
+    <h2 class="section-title">Shop by Category</h2>
+    <p class="section-sub">Browse our popular categories</p>
+    <div class="home-cta">
+        <a href="{% url 'products' %}">🛍️ Shop All Products</a>
+    </div>
+</div>
+{% endblock %}

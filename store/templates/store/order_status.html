@@ -1,0 +1,128 @@
+{% extends "store/base.html" %}
+{% block title %}My Orders – Sri Lakshmi Ganapati Kirana{% endblock %}
+
+{% block content %}
+<style>
+.orders-container {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 24px;
+}
+
+.orders-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #145a37;
+    margin-bottom: 20px;
+}
+
+.order-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(26,122,74,0.08);
+    padding: 18px 22px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+}
+
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(26,122,74,0.13);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.order-id {
+    font-weight: 700;
+    font-size: 16px;
+    color: #145a37;
+}
+
+.order-status {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.order-status.pending {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.order-status.confirmed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.order-status.shipped {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.order-status.delivered {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.order-status.cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.order-details {
+    font-size: 14px;
+    color: #6b7f72;
+}
+
+.order-total {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1a7a4a;
+    margin-top: 8px;
+}
+
+.empty-orders {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7f72;
+}
+
+.empty-orders .icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+</style>
+
+<div class="orders-container">
+    <h2 class="orders-title">My Orders</h2>
+
+    {% if orders %}
+        {% for order in orders %}
+        <a href="{% url 'order_detail' order.id %}" style="text-decoration:none; color:inherit;">
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">Order #{{ order.id }}</div>
+                    <div class="order-status {{ order.status }}">{{ order.status }}</div>
+                </div>
+                <div class="order-details">
+                    {{ order.created_at|date:"M d, Y • h:i A" }}
+                </div>
+                <div class="order-total">₹{{ order.total }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-orders">
+            <div class="icon">📦</div>
+            <p>You haven't placed any orders yet.<br/>Start shopping now!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

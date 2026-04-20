@@ -1,0 +1,66 @@
+{% extends "store/base.html" %}
+{% block title %}Products – Sri Lakshmi Ganapati Kirana{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="content-area">
+    <h2 class="section-title">Our Products</h2>
+    <p class="section-sub">Fresh, quality essentials for your kitchen</p>
+
+    {# ── Category Filter Tabs ── #}
+    <div class="cat-tabs">
+        <a href="{% url 'products' %}" class="cat-tab {% if not active_cat %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="{% url 'products' %}?cat={{ cat.id }}" class="cat-tab {% if active_cat == cat.id %}active{% endif %}">
+            {{ cat.icon }} {{ cat.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {# ── Product Grid ── #}
+    <div class="product-grid">
+        {% for product in products %}
+        {% with prices=product.get_available_units %}
+        {% if prices %}
+        <div class="product-card"
+             data-id="{{ product.id }}">
+
+            {# ✅ FIXED product image #}
+            <div class="product-img">
+                {% if product.image_file %}
+                    <img src="{{ product.image_file.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <img src="{% static 'store/images/default.png' %}" alt="No image">
+                {% endif %}
+            </div>
+
+            <h4>{{ product.name }}</h4>
+            <div class="p-price" data-product-id="{{ product.id }}">₹{{ prices.0.price|floatformat:0 }}</div>
+            <div class="p-unit">Select unit</div>
+
+            {# unit selector buttons from ProductPrice #}
+            <div class="unit-select">
+                {% for pp in prices %}
+                <button class="unit-btn {% if forloop.first %}active{% endif %}" 
+                        data-unit="{{ pp.unit_label }}"
+                        data-price="{{ pp.price }}">{{ pp.unit_label }}</button>
+                {% endfor %}
+            </div>
+
+            {# quantity + add to cart #}
+            <div class="qty-row">
+                <button class="qty-btn minus">−</button>
+                <span class="qty-val">0</span>
+                <button class="qty-btn plus">+</button>
+                <button class="add-cart-btn">Add 🛒</button>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% empty %}
+        <p style="text-align:center; color:#6b7f72; padding:40px 0; grid-column:1/-1;">No products found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

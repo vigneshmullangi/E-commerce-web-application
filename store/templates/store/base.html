@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}Sri Lakshmi Ganapati Kirana{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{% static 'store/css/style.css' %}"/>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% block body %}
+{# ── Company Bar + Navbar (shown on inner pages) ── #}
+{% if show_nav %}
+<div class="company-bar">
+    <div class="bar-item"> <h1>Sri Lakshmi Ganapati Kirana &amp; General</h1></div>
+    <div class="bar-item"><span class="icon">📧</span><h3><a href="mailto:srilakshmiganapati@gmail.com">
+            srilakshmiganapati@gmail.com</a></h3></div>
+    <div class="bar-item"><span class="icon">📞</span><a href="tel:+919392716488">
+            <h1>+91 93927 16488</a></h1></div>
+    <div class="bar-item"><span class="icon">🕐</span> Open 9 AM – 10 PM</div>
+</div>
+
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{% url 'home' %}" class="nav-logo">
+            <div class="logo-sm">🛒</div>
+            <span>Sri Lakshmi Ganapati<span class="nav-sub">Kirana &amp; General</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}"     {% if active_page == 'home' %}class="active"{% endif %}>Home</a>
+            <a href="{% url 'products' %}" {% if active_page == 'products' %}class="active"{% endif %}>Products</a>
+            <a href="{% url 'about' %}"    {% if active_page == 'about' %}class="active"{% endif %}>About</a>
+        </div>
+        <div class="nav-right">
+            <a href="{% url 'order_status' %}" class="order-status">Order Status</a>
+            <a href="#" class="cart-btn">🛒<span class="cart-badge">{{ cart_item_count|default:0 }}</span></a>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+
+{# ── Page Content ── #}
+{% block content %}{% endblock %}
+
+{# ── Cart Drawer (always present on inner pages) ── #}
+{% if show_nav %}
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-drawer" id="cart-drawer">
+    <div class="cart-header">
+        <h3>🛒 Your Cart</h3>
+        <button class="cart-close" id="cart-close-btn">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+        <div class="empty-cart">
+            <div class="empty-icon">🛒</div>
+            <p>Your cart is empty.<br/>Add some products!</p>
+        </div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+        <div class="cart-total-row"><span>Delivery</span><span id="cart-delivery">₹0</span></div>
+        <div class="delivery-note" id="delivery-note"></div>
+        <div class="cart-total-row" style="font-size:17px; margin-top:4px;">
+            <span>Total</span><span id="cart-total">₹0</span>
+        </div>
+        <button class="checkout-btn" id="checkout-btn" disabled>Place Order</button>
+    </div>
+</div>
+{% endif %}
+
+{# ── Toast ── #}
+<div class="toast" id="toast"></div>
+
+<script src="{% static 'store/js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
+{% endblock %}
