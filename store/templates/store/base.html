@@ -2,81 +2,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>{% block title %}Sri Lakshmi Ganapati Kirana{% endblock %}</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="{% static 'store/css/style.css' %}"/>
-{% block extra_css %}{% endblock %}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Sri Lakshmi Ganapati Kirana{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'store/css/style.css' %}?v=10">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-{% block body %}
-{# ── Company Bar + Navbar (shown on inner pages) ── #}
 {% if show_nav %}
-<div class="company-bar">
-    <div class="bar-item"> <h1>Sri Lakshmi Ganapati Kirana &amp; General</h1></div>
-    <div class="bar-item"><span class="icon">📧</span><h3><a href="mailto:srilakshmiganapati@gmail.com">
-            srilakshmiganapati@gmail.com</a></h3></div>
-    <div class="bar-item"><span class="icon">📞</span><a href="tel:+919392716488">
-            <h1>+91 93927 16488</a></h1></div>
-    <div class="bar-item"><span class="icon">🕐</span> Open 9 AM – 10 PM</div>
-</div>
-
 <nav class="navbar">
-    <div class="navbar-inner">
-        <a href="{% url 'home' %}" class="nav-logo">
-            <div class="logo-sm">🛒</div>
-            <span>Sri Lakshmi Ganapati<span class="nav-sub">Kirana &amp; General</span></span>
-        </a>
-        <div class="nav-links">
-            <a href="{% url 'home' %}"     {% if active_page == 'home' %}class="active"{% endif %}>Home</a>
-            <a href="{% url 'products' %}" {% if active_page == 'products' %}class="active"{% endif %}>Products</a>
-            <a href="{% url 'about' %}"    {% if active_page == 'about' %}class="active"{% endif %}>About</a>
-        </div>
-        <div class="nav-right">
-            <a href="{% url 'order_status' %}" class="order-status">Order Status</a>
-            <a href="#" class="cart-btn">🛒<span class="cart-badge">{{ cart_item_count|default:0 }}</span></a>
-            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
-        </div>
+  <div class="navbar-inner">
+    <a href="{% url 'home' %}" class="nav-logo">
+      <div class="logo-sm">
+        <img src="{% static 'store/images/mainlogo.png' %}" alt="Logo">
+      </div>
+      <span>Sri Lakshmi Ganapati<span class="nav-sub">Kirana &amp; General</span></span>
+    </a>
+
+    <div class="nav-links">
+      <a href="{% url 'home' %}"         {% if active_page == 'home' %}class="active"{% endif %}>Home</a>
+      <a href="{% url 'products' %}"     {% if active_page == 'products' %}class="active"{% endif %}>Products</a>
+      <a href="{% url 'about' %}"        {% if active_page == 'about' %}class="active"{% endif %}>About</a>
+      <a href="{% url 'order_status' %}" {% if active_page == 'order_status' %}class="active"{% endif %}>Order Status</a>
     </div>
+
+    <div class="nav-right">
+      {% if logged_in %}
+        {# ── Logged in: show cart + logout ── #}
+        <a href="#" class="cart-btn">🛒<span class="cart-badge">{{ cart_item_count|default:0 }}</span></a>
+        <a href="{% url 'logout' %}" class="logout-btn desktop-only">Logout</a>
+      {% else %}
+        {# ── Guest: show login button ── #}
+        <a href="{% url 'login' %}" class="logout-btn desktop-only">Login</a>
+      {% endif %}
+      <button class="hamburger" id="hamburger" aria-label="Toggle Menu">☰</button>
+    </div>
+  </div>
 </nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="{% url 'home' %}">Home</a>
+  <a href="{% url 'products' %}">Products</a>
+  <a href="{% url 'about' %}">About</a>
+  <a href="{% url 'order_status' %}">Order Status</a>
+  {% if logged_in %}
+    <span style="padding:10px 20px; color:#666; font-size:13px;">👤 {{ customer.name }}</span>
+    <a href="{% url 'logout' %}" class="mobile-logout">Logout</a>
+  {% else %}
+    <a href="{% url 'login' %}">Login</a>
+  {% endif %}
+</div>
 {% endif %}
 
-{# ── Page Content ── #}
 {% block content %}{% endblock %}
 
-{# ── Cart Drawer (always present on inner pages) ── #}
 {% if show_nav %}
 <div class="cart-overlay" id="cart-overlay"></div>
 <div class="cart-drawer" id="cart-drawer">
-    <div class="cart-header">
-        <h3>🛒 Your Cart</h3>
-        <button class="cart-close" id="cart-close-btn">✕</button>
-    </div>
-    <div class="cart-items" id="cart-items">
-        <div class="empty-cart">
-            <div class="empty-icon">🛒</div>
-            <p>Your cart is empty.<br/>Add some products!</p>
-        </div>
-    </div>
-    <div class="cart-footer">
-        <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
-        <div class="cart-total-row"><span>Delivery</span><span id="cart-delivery">₹0</span></div>
-        <div class="delivery-note" id="delivery-note"></div>
-        <div class="cart-total-row" style="font-size:17px; margin-top:4px;">
-            <span>Total</span><span id="cart-total">₹0</span>
-        </div>
-        <button class="checkout-btn" id="checkout-btn" disabled>Place Order</button>
-    </div>
+  <div class="cart-header">
+    <h3>🛒 Your Cart</h3>
+    <button class="cart-close" id="cart-close-btn">✕</button>
+  </div>
+  <div class="cart-items" id="cart-items">
+    <div class="empty-cart"><div class="empty-icon">🛒</div><p>Your cart is empty.</p></div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row"><span>Total</span><span id="cart-total">₹0</span></div>
+    <button class="checkout-btn" id="checkout-btn" disabled>Place Order</button>
+  </div>
 </div>
 {% endif %}
 
-{# ── Toast ── #}
-<div class="toast" id="toast"></div>
+<div class="float-btns">
+  <a href="https://wa.me/917090300592" target="_blank" class="float-btn float-wa" title="WhatsApp">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+  <a href="tel:+917090300592" class="float-btn float-call" title="Call Us">📞</a>
+</div>
 
-<script src="{% static 'store/js/main.js' %}"></script>
-{% block extra_js %}{% endblock %}
+<footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-column">
+      <h3>Sri Lakshmi Ganapati Kirana</h3>
+      <p>Bringing quality groceries and daily essentials to your doorstep since 2003.</p>
+    </div>
+    <div class="footer-column">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'products' %}">Products</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+        <li><a href="{% url 'order_status' %}">Order Status</a></li>
+        {% if logged_in %}
+          <li><a href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+          <li><a href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="footer-column">
+      <h3>Our Store</h3>
+      <p>Opposite MRO office, Sarpavaram Junction<br>
+      Kakinada – 533 005, Andhra Pradesh, India</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 Sri Lakshmi Ganapati Kirana. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="{% static 'store/js/main.js' %}?v=10"></script>
 </body>
 </html>
-{% endblock %}

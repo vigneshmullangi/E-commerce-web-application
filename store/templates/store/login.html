@@ -2,6 +2,54 @@
 {% block title %}Login – Sri Lakshmi Ganapati Kirana{% endblock %}
 
 {% block content %}
+<style>
+/* Address Field */
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #d6e4db;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: #fafbfa;
+    resize: none;
+    min-height: 60px;
+    transition: all 0.2s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #22a163;
+    box-shadow: 0 0 0 3px rgba(34,161,99,0.12);
+    background: #fff;
+}
+
+/* Address + Location Button */
+.location-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.location-wrap textarea {
+    flex: 1;
+}
+
+.location-btn {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg,#1a7a4a,#22a163);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.location-btn:hover {
+    transform: scale(1.05);
+}
+</style>
 <div class="auth-wrap">
     <div class="auth-card">
         <div class="auth-logo">
@@ -9,7 +57,7 @@
             <h1 style="font-size:18px; line-height:1.3;">Sri Lakshmi Ganapati<br/>Kirana &amp; General</h1>
             <p>Your daily essentials, delivered fresh</p>
         </div>
-        <h2 class="auth-title">Welcome Back</h2>
+        <h2 class="auth-title">Welcome</h2>
         <p class="auth-sub">Login to continue shopping</p>
 
         {% if error %}
@@ -18,18 +66,116 @@
 
         <form method="POST">
             {% csrf_token %}
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="john@email.com" required/>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" placeholder="Your password" required/>
-            </div>
+            <form method="POST">
+    {% csrf_token %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel"
+               name="mobile"
+               placeholder="Enter Mobile Number"
+               pattern="[0-9]{10}"
+               maxlength="10"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label>Name</label>
+        <input type="text"
+               name="name"
+               placeholder="Enter Your Name"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label>Address</label>
+
+        <div class="location-wrap">
+            <textarea id="address"
+                      name="address"
+                      placeholder="Enter Address"
+                      required></textarea>
+
+            <button type="button"
+                    class="location-btn"
+                    onclick="getLocation()">
+                📍
+            </button>
+        </div>
+    </div>
             <button type="submit" class="btn-auth">Login</button>
         </form>
-
-        <p class="auth-switch">Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
     </div>
 </div>
+<script>
+function getLocation() {
+
+    const addressField = document.getElementById("address");
+
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+
+    addressField.placeholder = "Fetching location...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        async function(position) {
+
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            try {
+
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
+                );
+
+                const data = await response.json();
+
+                if (data.display_name) {
+                    addressField.value = data.display_name;
+                } else {
+                    addressField.value =
+                        `Latitude: ${lat}, Longitude: ${lon}`;
+                }
+
+            } catch (error) {
+
+                addressField.value =
+                    `Latitude: ${lat}, Longitude: ${lon}`;
+
+            }
+
+        },
+
+        function(error) {
+
+            switch(error.code) {
+
+                case error.PERMISSION_DENIED:
+                    alert("Location permission denied.");
+                    break;
+
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information unavailable.");
+                    break;
+
+                case error.TIMEOUT:
+                    alert("Location request timed out.");
+                    break;
+
+                default:
+                    alert("Unable to fetch location.");
+            }
+
+        }
+
+    );
+}
+</script>
 {% endblock %}

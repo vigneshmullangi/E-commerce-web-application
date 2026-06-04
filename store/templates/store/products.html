@@ -3,64 +3,230 @@
 {% load static %}
 
 {% block content %}
-<div class="content-area">
-    <h2 class="section-title">Our Products</h2>
-    <p class="section-sub">Fresh, quality essentials for your kitchen</p>
+<style>
+  /* ── Filters Wrapper ── */
+  .filters-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 860px;
+    margin: 18px auto 24px;
+    padding: 0 16px;
+  }
 
-    {# ── Category Filter Tabs ── #}
-    <div class="cat-tabs">
-        <a href="{% url 'products' %}" class="cat-tab {% if not active_cat %}active{% endif %}">All</a>
-        {% for cat in categories %}
-        <a href="{% url 'products' %}?cat={{ cat.id }}" class="cat-tab {% if active_cat == cat.id %}active{% endif %}">
-            {{ cat.icon }} {{ cat.name }}
-        </a>
-        {% endfor %}
+  /* Search takes remaining space */
+  .search-form {
+    display: flex;
+    flex: 1;
+    gap: 0;
+  }
+
+  .search-form input[type="text"] {
+    flex: 1;
+    padding: 11px 16px;
+    border: 1px solid #d6e5dc;
+    border-right: none;
+    border-radius: 12px 0 0 12px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: #2f4f4f;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .search-form input[type="text"]:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40,167,69,.12);
+  }
+
+  .search-form button {
+    padding: 11px 16px;
+    background: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 0 12px 12px 0;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+    white-space: nowrap;
+  }
+
+  .search-form button:hover { background: #0ce938; }
+
+  /* Category select */
+  .cat-form select {
+    padding: 11px 14px;
+    border: 1px solid #0e81ce;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: #2f4f4f;
+    cursor: pointer;
+    outline: none;
+    transition: 0.3s;
+    white-space: nowrap;
+  }
+
+  .cat-form select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40,167,69,.12);
+  }
+
+  /* Result info + clear */
+  .search-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: -10px auto 18px;
+    padding: 0 16px;
+    font-size: 13px;
+    color: #6b7f72;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .search-meta strong { color: #28a745; }
+
+  .search-meta a {
+    color: #c0392b;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 3px 9px;
+    border: 1px solid #f5c6c0;
+    border-radius: 20px;
+    transition: 0.2s;
+  }
+
+  .search-meta a:hover {
+    background: #fdecea;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    .filters-row {
+      flex-direction: column;    /* stack vertically */
+      gap: 10px;
+      padding: 0 12px;
+      margin: 14px auto 18px;
+    }
+
+    .search-form {
+      width: 100%;
+    }
+
+    .cat-form {
+      width: 100%;
+    }
+
+    .cat-form select {
+      width: 100%;
+      font-size: 15px;
+    }
+
+    .search-form input[type="text"] {
+      font-size: 16px; /* prevents iOS zoom on focus */
+    }
+  }
+</style>
+
+<h2 class="section-title">Our Products</h2>
+
+<!-- ── Filters Row: Search + Category ── -->
+<div class="filters-row">
+
+  <!-- Search -->
+  <form class="search-form" method="GET" action="{% url 'products' %}">
+    {% if active_cat %}
+      <input type="hidden" name="cat" value="{{ active_cat }}">
+    {% endif %}
+    <input
+      type="text"
+      name="q"
+      value="{{ query }}"
+      placeholder="Search products…"
+      autocomplete="off"
+    >
+    <button type="submit">🔍</button>
+  </form>
+
+  <!-- Category -->
+  <form class="cat-form" method="GET" action="{% url 'products' %}">
+    {% if query %}
+      <input type="hidden" name="q" value="{{ query }}">
+    {% endif %}
+    <select name="cat" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if active_cat == cat.id %}selected{% endif %}>
+          {{ cat.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+
+</div>
+
+<!-- ── Result info ── -->
+{% if query %}
+<div class="search-meta">
+  <span>
+    <strong>{{ count }}</strong> result{{ count|pluralize }} for
+    "<strong>{{ query }}</strong>"{% if active_cat %} in this category{% endif %}
+  </span>
+  <a href="{% url 'products' %}{% if active_cat %}?cat={{ active_cat }}{% endif %}">✕ Clear</a>
+</div>
+{% endif %}
+
+<!-- ── Product Grid ── -->
+<div class="product-grid">
+  {% for product in products %}
+  {% with prices=product.get_available_units %}
+  {% if prices %}
+  <div class="product-card" data-id="{{ product.id }}">
+
+    <div class="product-img">
+      {% if product.image_file %}
+        <img src="{{ product.image_file.url }}" alt="{{ product.name }}">
+      {% else %}
+        <img src="{% static 'store/images/default.png' %}" alt="No image">
+      {% endif %}
     </div>
 
-    {# ── Product Grid ── #}
-    <div class="product-grid">
-        {% for product in products %}
-        {% with prices=product.get_available_units %}
-        {% if prices %}
-        <div class="product-card"
-             data-id="{{ product.id }}">
-
-            {# ✅ FIXED product image #}
-            <div class="product-img">
-                {% if product.image_file %}
-                    <img src="{{ product.image_file.url }}" alt="{{ product.name }}">
-                {% else %}
-                    <img src="{% static 'store/images/default.png' %}" alt="No image">
-                {% endif %}
-            </div>
-
-            <h4>{{ product.name }}</h4>
-            <div class="p-price" data-product-id="{{ product.id }}">₹{{ prices.0.price|floatformat:0 }}</div>
-            <div class="p-unit">Select unit</div>
-
-            {# unit selector buttons from ProductPrice #}
-            <div class="unit-select">
-                {% for pp in prices %}
-                <button class="unit-btn {% if forloop.first %}active{% endif %}" 
-                        data-unit="{{ pp.unit_label }}"
-                        data-price="{{ pp.price }}">{{ pp.unit_label }}</button>
-                {% endfor %}
-            </div>
-
-            {# quantity + add to cart #}
-            <div class="qty-row">
-                <button class="qty-btn minus">−</button>
-                <span class="qty-val">0</span>
-                <button class="qty-btn plus">+</button>
-                <button class="add-cart-btn">Add 🛒</button>
-            </div>
-        </div>
-        {% endif %}
-        {% endwith %}
-        {% empty %}
-        <p style="text-align:center; color:#6b7f72; padding:40px 0; grid-column:1/-1;">No products found.</p>
-        {% endfor %}
+    <h4>{{ product.name }}</h4>
+    <div class="p-price" data-product-id="{{ product.id }}">
+      ₹{{ prices.0.price|floatformat:0 }}
     </div>
+    <div class="p-unit">Select unit</div>
+
+    <div class="unit-select">
+      {% for pp in prices %}
+      <button class="unit-btn {% if forloop.first %}active{% endif %}"
+              data-unit="{{ pp.unit_label }}"
+              data-price="{{ pp.price }}">{{ pp.unit_label }}</button>
+      {% endfor %}
+    </div>
+
+    <div class="qty-row">
+      <button class="qty-btn minus">−</button>
+      <span class="qty-val">0</span>
+      <button class="qty-btn plus">+</button>
+      <button class="add-cart-btn">Add 🛒</button>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% empty %}
+  <p style="text-align:center;color:#6b7f72;padding:40px 0;grid-column:1/-1;font-family:'DM Sans',sans-serif;">
+    {% if query %}
+      😕 No results for "<strong>{{ query }}</strong>".
+      <a href="{% url 'products' %}" style="color:#28a745;">View all</a>
+    {% else %}
+      No products available.
+    {% endif %}
+  </p>
+  {% endfor %}
 </div>
 
 {% endblock %}
