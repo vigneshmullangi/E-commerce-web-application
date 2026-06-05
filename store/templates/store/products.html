@@ -3,8 +3,13 @@
 {% load static %}
 
 {% block content %}
+
+{# ✅ Pass login state to JS #}
+<script>
+  const IS_LOGGED_IN = {{ logged_in|yesno:"true,false" }};
+</script>
+
 <style>
-  /* ── Filters Wrapper ── */
   .filters-row {
     display: flex;
     align-items: center;
@@ -13,14 +18,11 @@
     margin: 18px auto 24px;
     padding: 0 16px;
   }
-
-  /* Search takes remaining space */
   .search-form {
     display: flex;
     flex: 1;
     gap: 0;
   }
-
   .search-form input[type="text"] {
     flex: 1;
     padding: 11px 16px;
@@ -34,12 +36,10 @@
     background: #fff;
     transition: border-color 0.3s, box-shadow 0.3s;
   }
-
   .search-form input[type="text"]:focus {
     border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(40,167,69,.12);
   }
-
   .search-form button {
     padding: 11px 16px;
     background: #28a745;
@@ -51,10 +51,7 @@
     transition: background 0.3s;
     white-space: nowrap;
   }
-
   .search-form button:hover { background: #0ce938; }
-
-  /* Category select */
   .cat-form select {
     padding: 11px 14px;
     border: 1px solid #0e81ce;
@@ -68,13 +65,10 @@
     transition: 0.3s;
     white-space: nowrap;
   }
-
   .cat-form select:focus {
     border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(40,167,69,.12);
   }
-
-  /* Result info + clear */
   .search-meta {
     display: flex;
     align-items: center;
@@ -86,9 +80,7 @@
     color: #6b7f72;
     font-family: 'DM Sans', sans-serif;
   }
-
   .search-meta strong { color: #28a745; }
-
   .search-meta a {
     color: #c0392b;
     text-decoration: none;
@@ -98,77 +90,63 @@
     border-radius: 20px;
     transition: 0.2s;
   }
+  .search-meta a:hover { background: #fdecea; }
 
-  .search-meta a:hover {
-    background: #fdecea;
+  /* ── Login nudge banner ── */
+  .login-nudge {
+    text-align: center;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin: 0 16px 20px;
+    font-size: 14px;
+    color: #795548;
+    font-family: 'DM Sans', sans-serif;
   }
+  .login-nudge a {
+    color: #22a163;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .login-nudge a:hover { text-decoration: underline; }
 
-  /* ── MOBILE ── */
   @media (max-width: 600px) {
-    .filters-row {
-      flex-direction: column;    /* stack vertically */
-      gap: 10px;
-      padding: 0 12px;
-      margin: 14px auto 18px;
-    }
-
-    .search-form {
-      width: 100%;
-    }
-
-    .cat-form {
-      width: 100%;
-    }
-
-    .cat-form select {
-      width: 100%;
-      font-size: 15px;
-    }
-
-    .search-form input[type="text"] {
-      font-size: 16px; /* prevents iOS zoom on focus */
-    }
+    .filters-row { flex-direction: column; gap: 10px; padding: 0 12px; margin: 14px auto 18px; }
+    .search-form { width: 100%; }
+    .cat-form { width: 100%; }
+    .cat-form select { width: 100%; font-size: 15px; }
+    .search-form input[type="text"] { font-size: 16px; }
   }
 </style>
 
 <h2 class="section-title">Our Products</h2>
 
-<!-- ── Filters Row: Search + Category ── -->
-<div class="filters-row">
+{% if not logged_in %}
+<div class="login-nudge">
+  🛒 Want to order? <a href="{% url 'login' %}?next=/products/">Login here</a> to add items to your cart.
+</div>
+{% endif %}
 
-  <!-- Search -->
+<!-- Filters Row -->
+<div class="filters-row">
   <form class="search-form" method="GET" action="{% url 'products' %}">
-    {% if active_cat %}
-      <input type="hidden" name="cat" value="{{ active_cat }}">
-    {% endif %}
-    <input
-      type="text"
-      name="q"
-      value="{{ query }}"
-      placeholder="Search products…"
-      autocomplete="off"
-    >
+    {% if active_cat %}<input type="hidden" name="cat" value="{{ active_cat }}">{% endif %}
+    <input type="text" name="q" value="{{ query }}" placeholder="Search products…" autocomplete="off">
     <button type="submit">🔍</button>
   </form>
 
-  <!-- Category -->
   <form class="cat-form" method="GET" action="{% url 'products' %}">
-    {% if query %}
-      <input type="hidden" name="q" value="{{ query }}">
-    {% endif %}
+    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
     <select name="cat" onchange="this.form.submit()">
       <option value="">All Categories</option>
       {% for cat in categories %}
-        <option value="{{ cat.id }}" {% if active_cat == cat.id %}selected{% endif %}>
-          {{ cat.name }}
-        </option>
+        <option value="{{ cat.id }}" {% if active_cat == cat.id %}selected{% endif %}>{{ cat.name }}</option>
       {% endfor %}
     </select>
   </form>
-
 </div>
 
-<!-- ── Result info ── -->
 {% if query %}
 <div class="search-meta">
   <span>
@@ -179,13 +157,12 @@
 </div>
 {% endif %}
 
-<!-- ── Product Grid ── -->
+<!-- Product Grid -->
 <div class="product-grid">
   {% for product in products %}
   {% with prices=product.get_available_units %}
   {% if prices %}
   <div class="product-card" data-id="{{ product.id }}">
-
     <div class="product-img">
       {% if product.image_file %}
         <img src="{{ product.image_file.url }}" alt="{{ product.name }}">
@@ -193,13 +170,11 @@
         <img src="{% static 'store/images/default.png' %}" alt="No image">
       {% endif %}
     </div>
-
     <h4>{{ product.name }}</h4>
     <div class="p-price" data-product-id="{{ product.id }}">
       ₹{{ prices.0.price|floatformat:0 }}
     </div>
     <div class="p-unit">Select unit</div>
-
     <div class="unit-select">
       {% for pp in prices %}
       <button class="unit-btn {% if forloop.first %}active{% endif %}"
@@ -207,7 +182,6 @@
               data-price="{{ pp.price }}">{{ pp.unit_label }}</button>
       {% endfor %}
     </div>
-
     <div class="qty-row">
       <button class="qty-btn minus">−</button>
       <span class="qty-val">0</span>

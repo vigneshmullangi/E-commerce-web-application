@@ -48,7 +48,6 @@
   <a href="{% url 'about' %}">About</a>
   <a href="{% url 'order_status' %}">Order Status</a>
   {% if logged_in %}
-    <span style="padding:10px 20px; color:#666; font-size:13px;">👤 {{ customer.name }}</span>
     <a href="{% url 'logout' %}" class="mobile-logout">Logout</a>
   {% else %}
     <a href="{% url 'login' %}">Login</a>

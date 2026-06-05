@@ -23,7 +23,6 @@ freshmart/
     │       └── seed_products.py   ← fills DB with 24 products
     ├── templates/store/
     │   ├── base.html          ← shared layout (navbar, cart drawer, toast)
-    │   ├── signup.html
     │   ├── login.html
     │   ├── home.html          ← carousel offers
     │   ├── products.html      ← product grid with filters

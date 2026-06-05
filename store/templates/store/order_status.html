@@ -108,7 +108,7 @@
         <a href="{% url 'order_detail' order.id %}" style="text-decoration:none; color:inherit;">
             <div class="order-card">
                 <div class="order-header">
-                    <div class="order-id">Order #{{ order.id }}</div>
+                    <div class="order-id">Order {{ forloop.revcounter }}</div>
                     <div class="order-status {{ order.status }}">{{ order.status }}</div>
                 </div>
                 <div class="order-details">

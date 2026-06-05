@@ -64,11 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const pid = card.dataset.id;
         if (!pid) return;
 
-        // Find first active unit button
         const firstUnit = card.querySelector('.unit-btn.active');
         if (!firstUnit) return;
 
-        // Initialize state
         cardState[pid] = {
             unit: firstUnit.dataset.unit,
             price: parseFloat(firstUnit.dataset.price),
@@ -76,13 +74,11 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const priceEl = card.querySelector('.p-price');
-        const qtyEl = card.querySelector('.qty-val');
+        const qtyEl   = card.querySelector('.qty-val');
 
-        // Update price display
         function updatePrice() {
             const state = cardState[pid];
             if (!state) return;
-            
             if (state.qty <= 1) {
                 priceEl.textContent = '₹' + Math.round(state.price);
             } else {
@@ -91,42 +87,45 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Unit button clicks
         card.querySelectorAll('.unit-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 card.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                
-                cardState[pid].unit = this.dataset.unit;
+                cardState[pid].unit  = this.dataset.unit;
                 cardState[pid].price = parseFloat(this.dataset.price);
                 updatePrice();
             });
         });
 
-        // Minus button
         const minusBtn = card.querySelector('.qty-btn.minus');
         if (minusBtn) {
             minusBtn.addEventListener('click', function() {
                 cardState[pid].qty = Math.max(0, cardState[pid].qty - 1);
-                qtyEl.textContent = cardState[pid].qty;
+                qtyEl.textContent  = cardState[pid].qty;
                 updatePrice();
             });
         }
 
-        // Plus button
         const plusBtn = card.querySelector('.qty-btn.plus');
         if (plusBtn) {
             plusBtn.addEventListener('click', function() {
                 cardState[pid].qty += 1;
-                qtyEl.textContent = cardState[pid].qty;
+                qtyEl.textContent   = cardState[pid].qty;
                 updatePrice();
             });
         }
 
-        // Add to cart button
+        // ── Add to cart ──
         const addBtn = card.querySelector('.add-cart-btn');
         if (addBtn) {
             addBtn.addEventListener('click', function() {
+
+                // ✅ NOT logged in → redirect to login
+                if (typeof IS_LOGGED_IN !== 'undefined' && !IS_LOGGED_IN) {
+                    window.location.href = '/login/?next=/products/';
+                    return;
+                }
+
                 const state = cardState[pid];
                 if (!state || state.qty === 0) {
                     showToast('Please set quantity first (+)');
@@ -150,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.status === 'ok') {
                         showToast(data.message);
                         cardState[pid].qty = 0;
-                        qtyEl.textContent = '0';
+                        qtyEl.textContent  = '0';
                         updatePrice();
                         refreshCartDrawer();
                     } else {
@@ -166,35 +165,42 @@ document.addEventListener('DOMContentLoaded', function () {
     // CART DRAWER
     // ========================================
     const cartOverlay = document.getElementById('cart-overlay');
-    const cartDrawer = document.getElementById('cart-drawer');
+    const cartDrawer  = document.getElementById('cart-drawer');
 
     function toggleCart() {
         if (!cartOverlay || !cartDrawer) return;
         cartOverlay.classList.toggle('open');
         cartDrawer.classList.toggle('open');
+        const isOpen    = cartDrawer.classList.contains('open');
+        const floatBtns = document.querySelector('.float-btns');
+        const bottomNav = document.querySelector('.bottom-nav');
+ 
+        if (floatBtns) floatBtns.style.display = isOpen ? 'none' : 'flex';
+        if (bottomNav) bottomNav.style.display  = isOpen ? 'none' : 'flex';
         if (cartDrawer.classList.contains('open')) {
             refreshCartDrawer();
         }
     }
 
-    // Open cart triggers
     document.querySelectorAll('.cart-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
+
+            // ✅ NOT logged in → redirect to login
+            if (typeof IS_LOGGED_IN !== 'undefined' && !IS_LOGGED_IN) {
+                window.location.href = '/login/?next=/products/';
+                return;
+            }
+
             toggleCart();
         });
     });
 
-    if (cartOverlay) {
-        cartOverlay.addEventListener('click', toggleCart);
-    }
+    if (cartOverlay) cartOverlay.addEventListener('click', toggleCart);
 
     const closeBtn = document.querySelector('.cart-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', toggleCart);
-    }
+    if (closeBtn) closeBtn.addEventListener('click', toggleCart);
 
-    // Refresh cart drawer
     function refreshCartDrawer() {
         fetch('/cart/get/')
             .then(r => r.json())
@@ -205,19 +211,18 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(() => {});
     }
 
-    // Render cart items
     function renderCartItems(data) {
-        const container = document.getElementById('cart-items');
+        const container  = document.getElementById('cart-items');
         const subtotalEl = document.getElementById('cart-subtotal');
         const deliveryEl = document.getElementById('cart-delivery');
-        const noteEl = document.getElementById('delivery-note');
-        const totalEl = document.getElementById('cart-total');
+        const noteEl     = document.getElementById('delivery-note');
+        const totalEl    = document.getElementById('cart-total');
         const checkoutEl = document.getElementById('checkout-btn');
 
         if (!container) return;
 
         if (data.items.length === 0) {
-            container.innerHTML = 
+            container.innerHTML =
                 '<div class="empty-cart">' +
                 '<div class="empty-icon">🛒</div>' +
                 '<p>Your cart is empty.<br/>Add some products!</p>' +
@@ -235,7 +240,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>'
             ).join('');
 
-            // Bind remove buttons
             container.querySelectorAll('.cart-item-remove').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
@@ -254,8 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (subtotalEl) subtotalEl.textContent = '₹' + data.subtotal;
-        if (deliveryEl) deliveryEl.textContent = data.delivery > 0 ? '₹' + data.delivery : 'Free';
-        if (totalEl) totalEl.textContent = '₹' + data.total;
+        if (deliveryEl) deliveryEl.textContent  = data.delivery > 0 ? '₹' + data.delivery : 'Free';
+        if (totalEl)    totalEl.textContent      = '₹' + data.total;
 
         if (noteEl) {
             if (data.items.length === 0) {
@@ -267,12 +271,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (checkoutEl) {
-            checkoutEl.disabled = (data.items.length === 0);
-        }
+        if (checkoutEl) checkoutEl.disabled = (data.items.length === 0);
     }
 
-    // Update cart badges
     function updateBadges(count) {
         document.querySelectorAll('.cart-badge').forEach(b => {
             b.textContent = count;
@@ -285,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function() {
-            this.disabled = true;
+            this.disabled    = true;
             this.textContent = 'Placing…';
 
             fetch('/order/place/', {
@@ -302,43 +303,41 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.href = '/order/confirm/';
                 } else {
                     showToast(data.message);
-                    checkoutBtn.disabled = false;
+                    checkoutBtn.disabled    = false;
                     checkoutBtn.textContent = 'Place Order';
                 }
             })
             .catch(() => {
                 showToast('Error placing order');
-                checkoutBtn.disabled = false;
+                checkoutBtn.disabled    = false;
                 checkoutBtn.textContent = 'Place Order';
             });
         });
     }
 
-    // Initial badge sync
-    fetch('/cart/get/')
-        .then(r => r.json())
-        .then(data => updateBadges(data.item_count))
-        .catch(() => {});
+    // Initial badge sync — only if logged in
+    if (typeof IS_LOGGED_IN !== 'undefined' && IS_LOGGED_IN) {
+        fetch('/cart/get/')
+            .then(r => r.json())
+            .then(data => updateBadges(data.item_count))
+            .catch(() => {});
+    }
 
 });
 
 document.addEventListener("click", function (e) {
-
-  if (e.target.closest(".order-status-btn")) {
-    const panel = document.querySelector(".order-status-panel");
-    if (!panel) return;
-    panel.classList.toggle("show");
-  }
-
+    if (e.target.closest(".order-status-btn")) {
+        const panel = document.querySelector(".order-status-panel");
+        if (!panel) return;
+        panel.classList.toggle("show");
+    }
 });
+
 document.getElementById("hamburger").onclick = function () {
-
     const menu = document.getElementById("mobile-menu");
-
-    if(menu.style.display === "block"){
+    if (menu.style.display === "block") {
         menu.style.display = "none";
     } else {
         menu.style.display = "block";
     }
-
 };
