@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Owner Dashboard – Sri Lakshmi Ganapati</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a8a4a;--green-light:#22a163;--green-dark:#156638;
+  --bg:#f0f7f3;--white:#fff;--gray:#6b8c72;
+  --pending:#f59e0b;--confirmed:#3b82f6;--shipped:#8b5cf6;
+  --delivered:#10b981;--cancelled:#ef4444;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --radius:14px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:#1a2e1f}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:linear-gradient(135deg,var(--green-dark),var(--green-light));
+  color:#fff;padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(26,138,74,.3);
+}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{font-size:24px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;line-height:1.2}
+.topbar-sub{font-size:11px;opacity:.8}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.logout-btn{
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;
+  cursor:pointer;text-decoration:none;transition:.2s;
+}
+.logout-btn:hover{background:rgba(255,255,255,.3)}
+
+/* ── STATS GRID ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+  padding:16px;
+}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:900px){.stats-grid{grid-template-columns:repeat(6,1fr)}}
+
+.stat-card{
+  background:var(--white);border-radius:var(--radius);
+  padding:16px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:4px;
+}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--green-dark)}
+.stat-label{font-size:11px;color:var(--gray);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.stat-card.money .stat-val{color:#1a2e1f}
+.stat-card.money .stat-val::before{content:'₹';font-size:14px;vertical-align:super}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;gap:8px;padding:0 16px 12px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{
+  padding:8px 20px;border-radius:20px;border:none;
+  font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:.2s;font-family:'DM Sans',sans-serif;
+}
+.tab-btn.active{background:var(--green-light);color:#fff}
+.tab-btn:not(.active){background:var(--white);color:var(--gray);box-shadow:var(--shadow)}
+
+/* ── STATUS FILTERS ── */
+.status-filters{
+  display:flex;gap:6px;padding:0 16px 14px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.status-filters::-webkit-scrollbar{display:none}
+.sf-btn{
+  padding:6px 14px;border-radius:16px;border:none;
+  font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:.2s;font-family:'DM Sans',sans-serif;
+  background:var(--white);color:#888;box-shadow:var(--shadow);
+}
+.sf-btn.active,.sf-btn:hover{color:#fff}
+.sf-btn[data-status=''].active{background:var(--green-light)}
+.sf-btn[data-status='pending'].active{background:var(--pending)}
+.sf-btn[data-status='confirmed'].active{background:var(--confirmed)}
+.sf-btn[data-status='shipped'].active{background:var(--shipped)}
+.sf-btn[data-status='delivered'].active{background:var(--delivered)}
+.sf-btn[data-status='cancelled'].active{background:var(--cancelled)}
+
+/* ── ORDERS LIST ── */
+.orders-list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+
+.order-card{
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+  border-left:4px solid #ddd;
+  cursor:pointer;transition:.15s;
+}
+.order-card:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.order-card[data-status='pending']{border-left-color:var(--pending)}
+.order-card[data-status='confirmed']{border-left-color:var(--confirmed)}
+.order-card[data-status='shipped']{border-left-color:var(--shipped)}
+.order-card[data-status='delivered']{border-left-color:var(--delivered)}
+.order-card[data-status='cancelled']{border-left-color:var(--cancelled)}
+
+.order-card-inner{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.order-left{flex:1;min-width:0}
+.order-num{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--green-dark)}
+.order-customer{font-size:13px;color:#444;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order-customer span{color:var(--gray);font-size:12px}
+.order-time{font-size:11px;color:#aaa;margin-top:4px}
+.order-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.order-total{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1a2e1f}
+.status-badge{
+  padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;color:#fff;
+}
+.badge-pending{background:var(--pending)}
+.badge-confirmed{background:var(--confirmed)}
+.badge-shipped{background:var(--shipped)}
+.badge-delivered{background:var(--delivered)}
+.badge-cancelled{background:var(--cancelled)}
+
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--gray);
+}
+.empty-state .ei{font-size:48px;margin-bottom:12px}
+
+/* ── SECTION HEADER ── */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 16px 8px;
+}
+.section-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#1a2e1f}
+.add-btn{
+  background:var(--green-light);color:#fff;border:none;
+  padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:.2s;font-family:'DM Sans',sans-serif;
+}
+.add-btn:hover{background:var(--green-dark)}
+
+/* ── DELIVERY BOYS LIST ── */
+.dboys-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
+.dboy-card{
+  background:var(--white);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dboy-info .dboy-name{font-weight:600;font-size:14px;color:#1a2e1f}
+.dboy-info .dboy-mobile{font-size:12px;color:var(--gray);margin-top:2px}
+.remove-btn{
+  background:#fff0f0;color:var(--cancelled);border:1px solid #ffd5d5;
+  padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:.2s;
+}
+.remove-btn:hover{background:var(--cancelled);color:#fff}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--white);border-radius:20px;padding:28px;
+  width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.modal h3{font-family:'Syne',sans-serif;font-size:18px;margin-bottom:20px;color:#1a2e1f}
+.modal .field{margin-bottom:14px}
+.modal label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.modal input{width:100%;padding:11px 14px;border:1.5px solid #d6e8dc;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s}
+.modal input:focus{border-color:var(--green-light);box-shadow:0 0 0 3px rgba(34,161,99,.12)}
+.modal-btns{display:flex;gap:10px;margin-top:6px}
+.modal-btns .cancel{flex:1;padding:11px;border:1.5px solid #d6e8dc;background:#fff;border-radius:10px;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.modal-btns .submit{flex:1;padding:11px;background:var(--green-light);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.modal-error{color:var(--cancelled);font-size:12px;margin-top:8px;display:none}
+
+/* ── BOTTOM PADDING ── */
+.pb{padding-bottom:32px}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">🏪</div>
+    <div>
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-sub">Sri Lakshmi Ganapati Kirana</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a href="{% url 'owner:logout' %}" class="logout-btn">Logout</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-val">{{ stats.today_count }}</div>
+    <div class="stat-label">Today's Orders</div>
+  </div>
+  <div class="stat-card money">
+    <div class="stat-val">{{ stats.today_sales|floatformat:0 }}</div>
+    <div class="stat-label">Today's Sales</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color:var(--pending)">{{ stats.pending }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color:var(--confirmed)">{{ stats.confirmed }}</div>
+    <div class="stat-label">Confirmed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val" style="color:var(--delivered)">{{ stats.delivered }}</div>
+    <div class="stat-label">Delivered</div>
+  </div>
+  <div class="stat-card money">
+    <div class="stat-val">{{ stats.total_sales|floatformat:0 }}</div>
+    <div class="stat-label">Total Revenue</div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn {% if tab == 'today' %}active{% endif %}"
+          onclick="switchTab('today')">📅 Today</button>
+  <button class="tab-btn {% if tab == 'all' %}active{% endif %}"
+          onclick="switchTab('all')">📋 All Orders</button>
+  <button class="tab-btn {% if tab == 'team' %}active{% endif %}"
+          onclick="switchTab('team')">🚴 Delivery Team</button>
+</div>
+
+<!-- Orders Section -->
+<div id="orders-section" {% if tab == 'team' %}style="display:none"{% endif %}>
+
+  <!-- Status Filters -->
+  <div class="status-filters">
+    <button class="sf-btn {% if not active_status %}active{% endif %}"
+            data-status="" onclick="filterStatus('')">All</button>
+    <button class="sf-btn {% if active_status == 'pending' %}active{% endif %}"
+            data-status="pending" onclick="filterStatus('pending')">⏳ Pending</button>
+    <button class="sf-btn {% if active_status == 'confirmed' %}active{% endif %}"
+            data-status="confirmed" onclick="filterStatus('confirmed')">✅ Confirmed</button>
+    <button class="sf-btn {% if active_status == 'shipped' %}active{% endif %}"
+            data-status="shipped" onclick="filterStatus('shipped')">🚚 Shipped</button>
+    <button class="sf-btn {% if active_status == 'delivered' %}active{% endif %}"
+            data-status="delivered" onclick="filterStatus('delivered')">📦 Delivered</button>
+    <button class="sf-btn {% if active_status == 'cancelled' %}active{% endif %}"
+            data-status="cancelled" onclick="filterStatus('cancelled')">❌ Cancelled</button>
+  </div>
+
+  <!-- Orders List -->
+  <div class="orders-list">
+    {% for order in orders %}
+    <div class="order-card" data-status="{{ order.status }}"
+         onclick="window.location.href='{% url 'owner:order_detail' order.id %}'">
+      <div class="order-card-inner">
+        <div class="order-left">
+          <div class="order-num">Order #{{ order.id }}</div>
+          <div class="order-customer">
+            {{ order.customer.name|default:"Unknown" }}
+            <span>· {{ order.customer.mobile|default:"-" }}</span>
+          </div>
+          <div class="order-time">{{ order.created_at|date:"d M Y, h:i A" }}</div>
+        </div>
+        <div class="order-right">
+          <div class="order-total">₹{{ order.total|floatformat:0 }}</div>
+          <span class="status-badge badge-{{ order.status }}">{{ order.status }}</span>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="ei">📭</div>
+      <p>No orders found.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Delivery Team Section -->
+<div id="team-section" {% if tab != 'team' %}style="display:none"{% endif %}>
+  <div class="section-header">
+    <div class="section-title">🚴 Delivery Team</div>
+    <button class="add-btn" onclick="openModal()">+ Add Boy</button>
+  </div>
+  <div class="dboys-list" id="dboys-list">
+    {% for boy in delivery_boys %}
+    <div class="dboy-card" id="dboy-{{ boy.id }}">
+      <div class="dboy-info">
+        <div class="dboy-name">{{ boy.name }}</div>
+        <div class="dboy-mobile">📱 {{ boy.mobile }}</div>
+      </div>
+      <button class="remove-btn" onclick="removeBoy({{ boy.id }}, this)">Remove</button>
+    </div>
+    {% empty %}
+    <div class="empty-state" id="empty-team">
+      <div class="ei">🚴</div>
+      <p>No delivery boys added yet.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="pb"></div>
+
+<!-- Add Delivery Boy Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>➕ Add Delivery Boy</h3>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="db-name" placeholder="Full name"/>
+    </div>
+    <div class="field">
+      <label>Mobile</label>
+      <input type="tel" id="db-mobile" placeholder="10-digit mobile"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="db-password" placeholder="Set a password"/>
+    </div>
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-btns">
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="submit" onclick="addBoy()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+function switchTab(tab) {
+  const url = new URL(window.location);
+  url.searchParams.set('tab', tab);
+  url.searchParams.delete('status');
+  window.location.href = url.toString();
+}
+
+function filterStatus(status) {
+  const url = new URL(window.location);
+  url.searchParams.set('tab', '{{ tab }}');
+  if (status) url.searchParams.set('status', status);
+  else url.searchParams.delete('status');
+  window.location.href = url.toString();
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('db-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('modal-error').style.display = 'none';
+  document.getElementById('db-name').value = '';
+  document.getElementById('db-mobile').value = '';
+  document.getElementById('db-password').value = '';
+}
+
+function addBoy() {
+  const name     = document.getElementById('db-name').value.trim();
+  const mobile   = document.getElementById('db-mobile').value.trim();
+  const password = document.getElementById('db-password').value.trim();
+  const errEl    = document.getElementById('modal-error');
+
+  if (!name || !mobile || !password) {
+    errEl.textContent = 'All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  fetch('{% url "owner:add_delivery_boy" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+    body: `name=${encodeURIComponent(name)}&mobile=${encodeURIComponent(mobile)}&password=${encodeURIComponent(password)}`
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      closeModal();
+      // Add card to list
+      const list = document.getElementById('dboys-list');
+      const empty = document.getElementById('empty-team');
+      if (empty) empty.remove();
+      list.insertAdjacentHTML('afterbegin', `
+        <div class="dboy-card" id="dboy-${data.id}">
+          <div class="dboy-info">
+            <div class="dboy-name">${data.name}</div>
+            <div class="dboy-mobile">📱 ${data.mobile}</div>
+          </div>
+          <button class="remove-btn" onclick="removeBoy(${data.id}, this)">Remove</button>
+        </div>`);
+    } else {
+      errEl.textContent = data.message;
+      errEl.style.display = 'block';
+    }
+  });
+}
+
+function removeBoy(id, btn) {
+  if (!confirm('Remove this delivery boy?')) return;
+  fetch(`{% url 'owner:remove_delivery_boy' 0 %}`.replace('/0/', `/${id}/`), {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF}
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      document.getElementById(`dboy-${id}`).remove();
+    }
+  });
+}
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>

@@ -2,6 +2,69 @@
 {% block title %}Home – Sri Lakshmi Ganapati Kirana{% endblock %}
 
 {% block content %}
+<style>
+/* ══════════════════════════════════════════════
+   INFO BOX (below categories)
+══════════════════════════════════════════════ */
+:root {
+  --white: #ffffff;
+  --green: #16a34a;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-600: #4b5563;
+  --gray-800: #1f2937;
+  --radius: 16px;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.08);
+}
+.info-box {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 0 16px 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+
+.info-box h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.info-val {
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+</style>
 {# show_nav is set in the view context – triggers navbar + cart drawer in base #}
 <script></script>
 <div class="hero">
@@ -60,4 +123,36 @@
         <a href="{% url 'products' %}">🛍️ Shop All Products</a>
     </div>
 </div>
+<div class="info-box">
+  <h3>📍 Our Store</h3>
+  <div class="info-row">
+    <span class="info-icon">🏠</span>
+    <div>
+      <div class="info-label">Address</div>
+      <div class="info-val">H.No. 9-28, Opp. Apollo Pharmacy, Near Vegetable Market, Ramanayyapeta, Kakinada - 533 033</div>
+    </div>
+  </div>
+  <div class="info-row">
+    <span class="info-icon">📞</span>
+    <div>
+      <div class="info-label">Phone</div>
+      <div class="info-val"><a href="tel:+91 9392716488" style="color:var(--green);font-weight:600">+91 9392716488</a></div>
+    </div>
+  </div>
+  <div class="info-row">
+    <span class="info-icon">🕐</span>
+    <div>
+      <div class="info-label">Business Hours</div>
+      <div class="info-val">Monday – Sunday &nbsp;|&nbsp; 9:00 AM – 10:00 PM</div>
+    </div>
+  </div>
+  <div class="info-row">
+    <span class="info-icon">🚚</span>
+    <div>
+      <div class="info-label">Delivery</div>
+      <div class="info-val">Free delivery on orders above ₹500. ₹50 charge below ₹500.</div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

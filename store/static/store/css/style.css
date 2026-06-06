@@ -688,11 +688,17 @@ a { text-decoration: none; color: inherit; }
 .float-btns {
   position: fixed;
   right: 16px;
-  bottom: 90px;
+  bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   z-index: 800;
+}
+.float-btns {
+    position: fixed;
+    right: 100px !important;
+    bottom: 200px !important;
+    z-index: 9999 !important;
 }
 .float-btn {
   width: 48px;
@@ -853,3 +859,4 @@ a { text-decoration: none; color: inherit; }
     height:150%;
     object-fit:cover;
 }
+

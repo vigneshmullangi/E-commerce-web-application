@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Delivery Orders</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#2563eb;--blue-light:#3b82f6;--blue-dark:#1d4ed8;
+  --bg:#eff6ff;--white:#fff;--gray:#6b7eaa;
+  --pending:#f59e0b;--confirmed:#3b82f6;--shipped:#8b5cf6;
+  --delivered:#10b981;--cancelled:#ef4444;
+  --shadow:0 2px 12px rgba(0,0,0,.08);--radius:14px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:#1a2440;padding-bottom:32px}
+
+.topbar{
+  background:linear-gradient(135deg,var(--blue-dark),var(--blue-light));
+  color:#fff;padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(37,99,235,.3);
+}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.topbar-sub{font-size:11px;opacity:.8}
+.logout-btn{
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;
+  cursor:pointer;text-decoration:none;transition:.2s;
+}
+.logout-btn:hover{background:rgba(255,255,255,.3)}
+
+.status-filters{
+  display:flex;gap:6px;padding:14px 16px 10px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.status-filters::-webkit-scrollbar{display:none}
+.sf-btn{
+  padding:6px 14px;border-radius:16px;border:none;
+  font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  background:var(--white);color:#888;box-shadow:var(--shadow);
+  transition:.2s;font-family:'DM Sans',sans-serif;
+}
+.sf-btn.active{background:var(--blue-light);color:#fff}
+
+.orders-list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.order-card{
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+  border-left:4px solid #ddd;cursor:pointer;transition:.15s;
+}
+.order-card:hover{transform:translateY(-1px)}
+.order-card[data-status='pending']{border-left-color:var(--pending)}
+.order-card[data-status='confirmed']{border-left-color:var(--confirmed)}
+.order-card[data-status='shipped']{border-left-color:var(--shipped)}
+.order-card[data-status='delivered']{border-left-color:var(--delivered)}
+.order-card[data-status='cancelled']{border-left-color:var(--cancelled)}
+.order-card-inner{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.order-num{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--blue-dark)}
+.order-customer{font-size:13px;color:#444;margin-top:2px}
+.order-customer span{color:var(--gray);font-size:12px}
+.order-time{font-size:11px;color:#aaa;margin-top:4px}
+.order-total{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1a2440}
+.status-badge{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;color:#fff}
+.badge-pending{background:var(--pending)}.badge-confirmed{background:var(--confirmed)}
+.badge-shipped{background:var(--shipped)}.badge-delivered{background:var(--delivered)}
+.badge-cancelled{background:var(--cancelled)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray)}
+.empty-state .ei{font-size:48px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div style="font-size:22px">🚴</div>
+    <div>
+      <div class="topbar-title">My Deliveries</div>
+      <div class="topbar-sub">👋 {{ delivery_name }}</div>
+    </div>
+  </div>
+  <a href="{% url 'owner:delivery_logout' %}" class="logout-btn">Logout</a>
+</div>
+
+<div class="status-filters">
+  <a href="?status=" class="sf-btn {% if not active_status %}active{% endif %}">All</a>
+  <a href="?status=pending"   class="sf-btn {% if active_status == 'pending' %}active{% endif %}">⏳ Pending</a>
+  <a href="?status=confirmed" class="sf-btn {% if active_status == 'confirmed' %}active{% endif %}">✅ Confirmed</a>
+  <a href="?status=shipped"   class="sf-btn {% if active_status == 'shipped' %}active{% endif %}">🚚 Shipped</a>
+  <a href="?status=delivered" class="sf-btn {% if active_status == 'delivered' %}active{% endif %}">📦 Delivered</a>
+</div>
+
+<div class="orders-list">
+  {% for order in orders %}
+  <div class="order-card" data-status="{{ order.status }}"
+       onclick="window.location.href='{% url 'owner:delivery_order_detail' order.id %}'">
+    <div class="order-card-inner">
+      <div>
+        <div class="order-num">Order #{{ order.id }}</div>
+        <div class="order-customer">
+          {{ order.customer.name|default:"Unknown" }}
+          <span>· {{ order.customer.mobile|default:"-" }}</span>
+        </div>
+        <div class="order-time">{{ order.created_at|date:"d M Y, h:i A" }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="order-total">₹{{ order.total|floatformat:0 }}</div>
+        <span class="status-badge badge-{{ order.status }}">{{ order.status }}</span>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="ei">📭</div>
+    <p>No orders found.</p>
+  </div>
+  {% endfor %}
+</div>
+
+</body>
+</html>
