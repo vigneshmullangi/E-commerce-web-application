@@ -682,39 +682,6 @@ a { text-decoration: none; color: inherit; }
         height:90px;
     }
 }
-/* ══════════════════════════════════════════════
-   FLOATING BUTTONS
-══════════════════════════════════════════════ */
-.float-btns {
-  position: fixed;
-  right: 16px;
-  bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 800;
-}
-.float-btns {
-    position: fixed;
-    right: 100px !important;
-    bottom: 200px !important;
-    z-index: 9999 !important;
-}
-.float-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  box-shadow: var(--shadow);
-  transition: transform .2s, box-shadow .2s;
-  text-decoration: none;
-}
-.float-btn:hover { transform: scale(1.1); box-shadow: var(--shadow-lg); }
-.float-wa   { background: #25d366; color: white; }
-.float-call { background: #0414f0; color: white; }
 
 /* ══════════════════════════════════════════════
    BOTTOM NAV (mobile)
@@ -859,4 +826,3 @@ a { text-decoration: none; color: inherit; }
     height:150%;
     object-fit:cover;
 }
-

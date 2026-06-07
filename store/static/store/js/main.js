@@ -172,10 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cartOverlay.classList.toggle('open');
         cartDrawer.classList.toggle('open');
         const isOpen    = cartDrawer.classList.contains('open');
-        const floatBtns = document.querySelector('.float-btns');
         const bottomNav = document.querySelector('.bottom-nav');
- 
-        if (floatBtns) floatBtns.style.display = isOpen ? 'none' : 'flex';
         if (bottomNav) bottomNav.style.display  = isOpen ? 'none' : 'flex';
         if (cartDrawer.classList.contains('open')) {
             refreshCartDrawer();
