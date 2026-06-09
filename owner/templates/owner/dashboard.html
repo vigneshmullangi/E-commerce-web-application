@@ -188,7 +188,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;colo
   <div class="topbar-left">
     <div class="topbar-logo">🏪</div>
     <div>
-      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-title">Owner Dashboard</div>
       <div class="topbar-sub">Sri Lakshmi Ganapati Kirana</div>
     </div>
   </div>
@@ -233,6 +233,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;colo
           onclick="switchTab('all')">📋 All Orders</button>
   <button class="tab-btn {% if tab == 'team' %}active{% endif %}"
           onclick="switchTab('team')">🚴 Delivery Team</button>
+  <a href="{% url 'owner:prices' %}" class="tab-btn" style="text-decoration:none">💰 Update Prices</a>
 </div>
 
 <!-- Orders Section -->

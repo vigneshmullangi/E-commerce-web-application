@@ -6,9 +6,8 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.db.models import Sum, Count
 from django.contrib.auth.hashers import make_password, check_password
-from django.utils import timezone
-from datetime import timedelta
-from store.models import Order, OrderItem, OrderStatusHistory, Customer, Product, Category
+
+from store.models import Order, OrderItem, OrderStatusHistory, Customer, Product, Category, ProductPrice
 from .models import DeliveryBoy
 
 # ── Owner credentials (change these!) ──
@@ -24,6 +23,9 @@ def owner_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.session.get('owner_logged_in'):
+            # Return JSON error for AJAX, redirect for normal requests
+            if request.headers.get('X-CSRFToken') or request.content_type == 'application/x-www-form-urlencoded':
+                return JsonResponse({'status': 'error', 'message': 'Session expired. Please login again.'}, status=403)
             return redirect('owner:login')
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -33,6 +35,8 @@ def delivery_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.session.get('delivery_logged_in'):
+            if request.headers.get('X-CSRFToken') or request.content_type == 'application/x-www-form-urlencoded':
+                return JsonResponse({'status': 'error', 'message': 'Session expired. Please login again.'}, status=403)
             return redirect('owner:delivery_login')
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -110,14 +114,7 @@ def dashboard(request):
 
     # All orders queryset
     all_orders   = Order.objects.select_related('customer').prefetch_related('items')
-
-    start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    end = start + timedelta(days=1)
-
-    today_orders = all_orders.filter(
-        created_at__gte=start,
-        created_at__lt=end
-    )
+    today_orders = all_orders.filter(created_at__date=today)
 
     orders = today_orders if tab == 'today' else all_orders
     if status:
@@ -168,15 +165,25 @@ def order_detail(request, order_id):
     })
 
 
-@owner_required
 @require_POST
 def update_status(request, order_id):
+    # Allow both owner and delivery boy
+    is_owner    = request.session.get('owner_logged_in')
+    is_delivery = request.session.get('delivery_logged_in')
+
+    if not is_owner and not is_delivery:
+        return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=403)
+
     order      = get_object_or_404(Order, id=order_id)
     new_status = request.POST.get('status')
     valid      = [s[0] for s in Order.STATUS_CHOICES]
 
     if new_status not in valid:
         return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+
+    # Delivery boy can only mark as delivered
+    if is_delivery and not is_owner and new_status != 'delivered':
+        return JsonResponse({'status': 'error', 'message': 'Not allowed'}, status=403)
 
     order.status = new_status
     order.save()
@@ -253,3 +260,87 @@ def delivery_order_detail(request, order_id):
         'history':       history,
         'delivery_name': request.session.get('delivery_name', 'Delivery Boy'),
     })
+
+
+# ═══════════════════════════════════════════════
+#  PRICE MANAGEMENT
+# ═══════════════════════════════════════════════
+
+@owner_required
+def prices_view(request):
+    from store.models import Category
+    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('prices')
+    total_prices = sum(p.prices.filter(is_available=True).count() for p in products)
+
+    return render(request, 'owner/prices.html', {
+        'products':     products,
+        'total_prices': total_prices,
+        'owner_name':   request.session.get('owner_name', 'Owner'),
+    })
+
+
+@owner_required
+@require_POST
+def update_price(request):
+    from decimal import Decimal, InvalidOperation
+    price_id  = request.POST.get('price_id')
+    new_price = request.POST.get('price')
+
+    if not price_id or not new_price:
+        return JsonResponse({'status': 'error', 'message': 'Missing price_id or price'}, status=400)
+
+    try:
+        new_price_dec = Decimal(str(new_price)).quantize(Decimal('0.01'))
+        if new_price_dec < 0:
+            return JsonResponse({'status': 'error', 'message': 'Price cannot be negative'}, status=400)
+        pp = ProductPrice.objects.get(pk=int(price_id))
+        pp.price = new_price_dec
+        pp.save()
+        return JsonResponse({'status': 'ok', 'price_id': price_id, 'new_price': str(new_price_dec)})
+    except ProductPrice.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Price not found'}, status=404)
+    except InvalidOperation:
+        return JsonResponse({'status': 'error', 'message': 'Invalid price value'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# ═══════════════════════════════════════════════
+#  DELIVERY BOY — MARK AS DELIVERED
+# ═══════════════════════════════════════════════
+
+@delivery_required
+@require_POST
+def delivery_mark_delivered(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+
+    if order.status in ('delivered', 'cancelled'):
+        return JsonResponse({'status': 'error', 'message': 'Cannot update this order.'}, status=400)
+
+    order.status = 'delivered'
+    order.save()
+
+    OrderStatusHistory.objects.create(
+        order=order, status='delivered', amount=order.total
+    )
+    return JsonResponse({'status': 'ok'})
+
+
+@owner_required
+@require_POST
+def toggle_product(request):
+    product_id = request.POST.get('product_id')
+    is_active  = request.POST.get('is_active') == '1'
+
+    if not product_id:
+        return JsonResponse({'status': 'error', 'message': 'Missing product_id'}, status=400)
+
+    try:
+        product           = Product.objects.get(pk=int(product_id))
+        product.is_active = is_active
+        product.save()
+        return JsonResponse({'status': 'ok', 'is_active': is_active})
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+    except (ValueError, TypeError) as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

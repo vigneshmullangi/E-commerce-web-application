@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Update Prices – Owner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a8a4a;--green-light:#22a163;--green-dark:#156638;
+  --bg:#f0f7f3;--white:#fff;--gray:#6b8c72;
+  --shadow:0 2px 12px rgba(0,0,0,.08);--radius:14px;
+  --red:#ef4444;--orange:#f59e0b;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;color:#1a2e1f;padding-bottom:80px}
+
+.topbar{
+  background:linear-gradient(135deg,var(--green-dark),var(--green-light));
+  color:#fff;padding:14px 20px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(26,138,74,.3);
+}
+.back-btn{
+  background:rgba(255,255,255,.2);border:none;color:#fff;
+  width:36px;height:36px;border-radius:10px;font-size:18px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  text-decoration:none;transition:.2s;flex-shrink:0;
+}
+.back-btn:hover{background:rgba(255,255,255,.3)}
+.topbar-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.topbar-sub{font-size:12px;opacity:.8}
+
+.page{max-width:700px;margin:0 auto;padding:16px}
+
+.search-wrap{
+  background:var(--white);border-radius:var(--radius);
+  padding:12px 16px;box-shadow:var(--shadow);margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.search-wrap input{
+  flex:1;border:none;outline:none;font-size:15px;
+  font-family:'DM Sans',sans-serif;color:#1a2e1f;background:transparent;
+}
+.search-wrap span{font-size:18px;color:var(--gray)}
+
+.cat-header{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--gray);text-transform:uppercase;letter-spacing:.06em;
+  padding:16px 4px 8px;
+}
+
+.product-card{
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;
+}
+.product-header{
+  padding:14px 16px 10px;border-bottom:1px solid #f5f5f5;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.product-name{font-size:15px;font-weight:600;color:#1a2e1f}
+.product-cat{font-size:11px;color:var(--gray);margin-top:2px}
+.saved-tag{
+  font-size:11px;color:var(--green-light);font-weight:600;
+  background:#f0fdf4;padding:3px 8px;border-radius:6px;
+  display:none;
+}
+.saved-tag.show{display:block}
+
+.price-rows{padding:10px 16px 14px}
+.price-row{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 0;border-bottom:1px solid #f9f9f9;
+}
+.price-row:last-child{border-bottom:none}
+.unit-label{font-size:13px;font-weight:600;color:#1a2e1f;min-width:60px;flex-shrink:0}
+.price-input-wrap{flex:1;position:relative;display:flex;align-items:center}
+.rupee{position:absolute;left:10px;font-size:14px;color:var(--gray);font-weight:600;pointer-events:none}
+.price-input{
+  width:100%;padding:9px 10px 9px 26px;
+  border:1.5px solid #d6e8dc;border-radius:10px;
+  font-size:15px;font-family:'DM Sans',sans-serif;
+  color:#1a2e1f;outline:none;transition:.2s;
+  -moz-appearance:textfield;
+}
+.price-input::-webkit-inner-spin-button,
+.price-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.price-input:focus{border-color:var(--green-light);box-shadow:0 0 0 3px rgba(34,161,99,.12)}
+.price-input.changed{border-color:var(--orange);background:#fffbf0}
+.save-row-btn{
+  padding:8px 14px;background:var(--green-light);color:#fff;
+  border:none;border-radius:9px;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:.2s;
+  font-family:'DM Sans',sans-serif;flex-shrink:0;
+}
+.save-row-btn:hover{background:var(--green-dark)}
+.save-row-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* ── SAVE ALL — fixed bottom bar ── */
+.save-all-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--white);border-top:2px solid #d6e8dc;
+  padding:12px 20px;z-index:100;
+  box-shadow:0 -4px 16px rgba(0,0,0,.08);
+  display:flex;justify-content:center;
+}
+.save-all-btn{
+  background:linear-gradient(135deg,var(--green-dark),var(--green-light));
+  color:#fff;border:none;padding:13px 0;border-radius:12px;
+  font-size:15px;font-weight:700;cursor:pointer;
+  font-family:'Syne',sans-serif;transition:.2s;
+  box-shadow:0 4px 16px rgba(34,161,99,.3);
+  width:100%;max-width:500px;
+}
+.save-all-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(34,161,99,.4)}
+.save-all-btn:disabled{background:#aaa;box-shadow:none;cursor:not-allowed;transform:none}
+
+/* ── TOAST — fully hidden until .show ── */
+.toast{
+  position:fixed;bottom:80px;left:50%;
+  transform:translateX(-50%) translateY(100px);
+  visibility:hidden;opacity:0;
+  background:#1a2e1f;color:#fff;padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:500;z-index:999;
+  transition:transform .3s ease, opacity .3s ease, visibility .3s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+  visibility:visible;opacity:1;
+}
+
+.hidden{display:none}
+
+/* ── AVAILABILITY TOGGLE ── */
+.toggle-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex-shrink:0}
+.toggle-input{display:none}
+.toggle-slider{width:40px;height:22px;border-radius:11px;background:#ddd;position:relative;transition:.25s;flex-shrink:0}
+.toggle-slider::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle-input:checked + .toggle-slider{background:var(--green-light)}
+.toggle-input:checked + .toggle-slider::after{left:20px}
+.toggle-label{font-size:12px;font-weight:600;color:var(--gray);min-width:64px}
+.toggle-input:checked ~ .toggle-label{color:var(--green-light)}
+.product-card.unavailable{opacity:.6}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="{% url 'owner:dashboard' %}" class="back-btn">←</a>
+  <div>
+    <div class="topbar-title">Update Prices</div>
+    <div class="topbar-sub">{{ total_prices }} price entries</div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="search-wrap">
+    <span>🔍</span>
+    <input type="text" id="search-input" placeholder="Search product name…" oninput="filterProducts()"/>
+  </div>
+
+  {% regroup products by category as cat_list %}
+  {% for cat in cat_list %}
+  <div class="cat-group" data-cat="{{ cat.grouper.name|lower }}">
+    <div class="cat-header">{{ cat.grouper.name }}</div>
+    {% for product in cat.list %}
+    {% with units=product.get_available_units %}
+    {% if units %}
+    <div class="product-card {% if not product.is_active %}unavailable{% endif %}" data-name="{{ product.name|lower }}">
+      <div class="product-header">
+        <div>
+          <div class="product-name">{{ product.name }}</div>
+          <div class="product-cat">{{ product.category.name }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="saved-tag" id="saved-{{ product.id }}">✓ Saved</div>
+          <label class="toggle-wrap">
+            <input type="checkbox" class="toggle-input"
+                   data-product-id="{{ product.id }}"
+                   {% if product.is_active %}checked{% endif %}
+                   onchange="toggleProduct({{ product.id }}, this)"/>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label" id="tlabel-{{ product.id }}">
+              {% if product.is_active %}Available{% else %}Unavailable{% endif %}
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="price-rows">
+        {% for pp in units %}
+        <div class="price-row">
+          <div class="unit-label">{{ pp.unit_label }}</div>
+          <div class="price-input-wrap">
+            <span class="rupee">₹</span>
+            <input type="number" class="price-input"
+                   data-price-id="{{ pp.id }}"
+                   data-product-id="{{ product.id }}"
+                   data-original="{{ pp.price }}"
+                   value="{{ pp.price|floatformat:0 }}"
+                   min="0" step="1"
+                   oninput="onPriceChange(this)"/>
+          </div>
+          <button class="save-row-btn"
+                  onclick="saveSingle({{ pp.id }}, {{ product.id }}, this)">Save</button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Fixed Save All bar -->
+<div class="save-all-bar">
+  <button class="save-all-btn" id="save-all-btn" onclick="saveAll()">💾 Save All Changes</button>
+</div>
+
+<!-- Toast — invisible until triggered -->
+<div class="toast" id="toast"></div>
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+const changedPrices = {};
+
+function onPriceChange(input) {
+  const priceId  = input.dataset.priceId;
+  const original = parseFloat(input.dataset.original);
+  const current  = parseFloat(input.value);
+  if (current !== original && !isNaN(current)) {
+    input.classList.add('changed');
+    changedPrices[priceId] = current;
+  } else {
+    input.classList.remove('changed');
+    delete changedPrices[priceId];
+  }
+}
+
+function saveSingle(priceId, productId, btn) {
+  const input = document.querySelector(`input[data-price-id="${priceId}"]`);
+  const value = parseFloat(input.value);
+  if (isNaN(value) || value < 0) { showToast('Enter a valid price'); return; }
+
+  btn.disabled = true; btn.textContent = '…';
+
+  fetch('{% url "owner:update_price" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+    body: `price_id=${priceId}&price=${value}`
+  })
+  .then(r => { if (!r.ok) throw new Error('Server error: ' + r.status); return r.json(); })
+  .then(data => {
+    btn.disabled = false; btn.textContent = 'Save';
+    if (data.status === 'ok') {
+      input.dataset.original = value;
+      input.classList.remove('changed');
+      delete changedPrices[priceId];
+      const tag = document.getElementById(`saved-${productId}`);
+      if (tag) { tag.classList.add('show'); setTimeout(() => tag.classList.remove('show'), 2000); }
+      showToast('Price updated ✓');
+    } else {
+      showToast('Error: ' + data.message);
+    }
+  })
+  .catch(err => { btn.disabled = false; btn.textContent = 'Save'; showToast('Failed: ' + err.message); });
+}
+
+function saveAll() {
+  const entries = Object.entries(changedPrices);
+  const btn = document.getElementById('save-all-btn');
+  if (!entries.length) { showToast('No changes to save'); return; }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  Promise.all(entries.map(([priceId, value]) =>
+    fetch('{% url "owner:update_price" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+      body: `price_id=${priceId}&price=${value}`
+    }).then(r => r.json())
+  )).then(results => {
+    btn.disabled = false; btn.textContent = '💾 Save All Changes';
+    let saved = 0;
+    results.forEach((data, i) => {
+      if (data.status === 'ok') {
+        const pid   = entries[i][0];
+        const input = document.querySelector(`input[data-price-id="${pid}"]`);
+        if (input) { input.dataset.original = changedPrices[pid]; input.classList.remove('changed'); }
+        delete changedPrices[pid];
+        saved++;
+      }
+    });
+    showToast(`✓ ${saved} price${saved !== 1 ? 's' : ''} saved`);
+  }).catch(() => { btn.disabled = false; btn.textContent = '💾 Save All Changes'; showToast('Error saving'); });
+}
+
+function filterProducts() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  document.querySelectorAll('.product-card').forEach(card => {
+    card.classList.toggle('hidden', q && !card.dataset.name.includes(q));
+  });
+  document.querySelectorAll('.cat-group').forEach(group => {
+    const visible = [...group.querySelectorAll('.product-card')].some(c => !c.classList.contains('hidden'));
+    group.style.display = (q && !visible) ? 'none' : '';
+  });
+}
+
+function toggleProduct(productId, checkbox) {
+  const isActive = checkbox.checked;
+  const card     = checkbox.closest('.product-card');
+  const label    = document.getElementById(`tlabel-${productId}`);
+  card.classList.toggle('unavailable', !isActive);
+  label.textContent = isActive ? 'Available' : 'Unavailable';
+  fetch('{% url "owner:toggle_product" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+    body: `product_id=${productId}&is_active=${isActive ? 1 : 0}`
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      showToast(isActive ? '✅ Marked available' : '🚫 Marked unavailable');
+    } else {
+      checkbox.checked = !isActive;
+      card.classList.toggle('unavailable', isActive);
+      label.textContent = isActive ? 'Unavailable' : 'Available';
+      showToast('Error: ' + data.message);
+    }
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

@@ -54,7 +54,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;colo
   text-decoration:none;font-family:'Syne',sans-serif;margin-bottom:14px;
   box-shadow:0 4px 16px rgba(37,99,235,.3);transition:.2s;
 }
-.call-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(37,99,235,.4)}
+.call-btn:hover{transform:translateY(-1px)}
+
+/* ── STATUS BUTTONS (same style as owner) ── */
+.status-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:14px}
+.status-card h3{font-family:'Syne',sans-serif;font-size:15px;margin-bottom:14px;color:#1a2440}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:400px){.status-grid{grid-template-columns:repeat(5,1fr)}}
+.status-btn{
+  padding:10px 6px;border-radius:10px;border:2px solid transparent;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  cursor:pointer;transition:.2s;text-align:center;background:#f5f5f5;color:#888;
+  font-family:'DM Sans',sans-serif;
+}
+.status-btn:hover{transform:translateY(-1px)}
+.status-btn.current{color:#fff;border-color:transparent}
+.status-btn[data-s='pending'].current{background:var(--pending)}
+.status-btn[data-s='confirmed'].current{background:var(--confirmed)}
+.status-btn[data-s='shipped'].current{background:var(--shipped)}
+.status-btn[data-s='delivered'].current{background:var(--delivered)}
+.status-btn[data-s='cancelled'].current{background:var(--cancelled)}
+.status-btn[data-s='pending']:hover{background:var(--pending);color:#fff}
+.status-btn[data-s='confirmed']:hover{background:var(--confirmed);color:#fff}
+.status-btn[data-s='shipped']:hover{background:var(--shipped);color:#fff}
+.status-btn[data-s='delivered']:hover{background:var(--delivered);color:#fff}
+.status-btn[data-s='cancelled']:hover{background:var(--cancelled);color:#fff}
+/* Disabled for delivery boy — only delivered is clickable */
+.status-btn.readonly{cursor:not-allowed;opacity:.45;pointer-events:none}
+.status-btn.readonly.current{opacity:1;pointer-events:none}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1a2440;color:#fff;padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:500;z-index:999;
+  transition:transform .3s ease;pointer-events:none;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -75,14 +110,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;colo
   </a>
   {% endif %}
 
+  <!-- Status buttons — only Delivered is tappable -->
+  <div class="status-card">
+    <h3>📋 Update Status</h3>
+    <div class="status-grid">
+      <button class="status-btn readonly {% if order.status == 'pending' %}current{% endif %}"    data-s="pending">⏳<br/>Pending</button>
+      <button class="status-btn readonly {% if order.status == 'confirmed' %}current{% endif %}"  data-s="confirmed">✅<br/>Confirmed</button>
+      <button class="status-btn readonly {% if order.status == 'shipped' %}current{% endif %}"    data-s="shipped">🚚<br/>Shipped</button>
+      <button class="status-btn {% if order.status == 'delivered' %}current{% endif %}"           data-s="delivered" onclick="updateStatus('delivered')">📦<br/>Delivered</button>
+      <button class="status-btn readonly {% if order.status == 'cancelled' %}current{% endif %}"  data-s="cancelled">❌<br/>Cancelled</button>
+    </div>
+  </div>
+
   <!-- Status -->
   <div class="info-card">
-    <h3>📋 Order Status</h3>
+    <h3>📋 Order Info</h3>
     <div class="info-row">
-      <span class="lbl">Current Status</span>
-      <span class="status-badge badge-{{ order.status }}">{{ order.status }}</span>
+      <span class="lbl">Status</span>
+      <span class="status-badge badge-{{ order.status }}" id="status-badge">{{ order.status }}</span>
     </div>
-    <div class="info-row"><span class="lbl">Order Date</span><span class="val">{{ order.created_at|date:"d M Y, h:i A" }}</span></div>
+    <div class="info-row">
+      <span class="lbl">Order Date</span>
+      <span class="val">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+    </div>
   </div>
 
   <!-- Customer -->
@@ -113,5 +163,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;colo
   </div>
 
 </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+let currentStatus = '{{ order.status }}';
+
+function updateStatus(newStatus) {
+  if (newStatus === currentStatus) { showToast('Already ' + newStatus); return; }
+  if (!confirm('Mark this order as Delivered?')) return;
+
+  fetch('{% url "owner:update_status" order.id %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+    body: `status=${newStatus}`
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.toggle('current', btn.dataset.s === newStatus);
+      });
+      document.getElementById('status-badge').textContent = newStatus;
+      document.getElementById('status-badge').className   = 'status-badge badge-' + newStatus;
+      currentStatus = newStatus;
+      showToast('Marked as delivered ✓');
+    } else {
+      showToast('Error: ' + data.message);
+    }
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
 </body>
 </html>
