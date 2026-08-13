@@ -54,20 +54,36 @@ WSGI_APPLICATION = 'freshmart.wsgi.application'
 # ─────────────────────────────────────────
 # DATABASE  →  MySQL via XAMPP
 # ─────────────────────────────────────────
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME':     'freshmart_db',      # ← create this DB in phpMyAdmin
-        'USER':     'root',              # ← XAMPP default user
-        'PASSWORD': '',                  # ← empty by default in XAMPP
-        'HOST':     '127.0.0.1',
-        'PORT':     '3307',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+if os.environ.get('MYSQLHOST'):
+    # Railway MySQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQLDATABASE'),
+            'USER': os.environ.get('MYSQLUSER'),
+            'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+            'HOST': os.environ.get('MYSQLHOST'),
+            'PORT': os.environ.get('MYSQLPORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
     }
-}
-
+else:
+    # Local XAMPP MySQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'freshmart_db',
+            'USER': 'root',
+            'PASSWORD': '',
+            'HOST': '127.0.0.1',
+            'PORT': '3307',
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
 # ─────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
