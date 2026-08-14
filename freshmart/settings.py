@@ -9,6 +9,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -114,3 +115,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # ─────────────────────────────────────────
 LOGIN_URL       = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://e-commerce-web-application-production-99e8.up.railway.app',
+]
