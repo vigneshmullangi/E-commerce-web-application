@@ -240,6 +240,31 @@ def cart_remove(request):
 
 
 @session_required
+@require_POST
+def cart_update(request):
+    try:
+        data = json.loads(request.body)
+        index = int(data['index'])
+        delta = int(data['delta'])
+        cart = _get_cart(request)
+
+        if delta not in (-1, 1) or not (0 <= index < len(cart)):
+            return JsonResponse({'status': 'error', 'message': 'Invalid cart update.'}, status=400)
+
+        item = cart[index]
+        item['qty'] += delta
+        if item['qty'] <= 0:
+            cart.pop(index)
+        else:
+            item['total'] = round(item['unit_price'] * item['qty'], 2)
+
+        _save_cart(request, cart)
+        return JsonResponse({'status': 'ok'})
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({'status': 'error', 'message': 'Invalid cart update.'}, status=400)
+
+
+@session_required
 def cart_get(request):
     cart     = _get_cart(request)
     items    = []
@@ -251,7 +276,7 @@ def cart_get(request):
             items.append({
                 'product_id': c['product_id'],
                 'name':       p.name,
-                'emoji':      '📦',
+                'image_url':  p.image_file.url if p.image_file else '',
                 'unit':       c['unit'],
                 'qty':        c['qty'],
                 'unit_price': c['unit_price'],

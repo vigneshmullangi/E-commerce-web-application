@@ -173,7 +173,11 @@ document.addEventListener('DOMContentLoaded', function () {
         cartDrawer.classList.toggle('open');
         const isOpen    = cartDrawer.classList.contains('open');
         const bottomNav = document.querySelector('.bottom-nav');
+        const floatBtns = document.getElementById('float-btns');
+        const askAiBtn = document.getElementById('ask-ai-btn');
         if (bottomNav) bottomNav.style.display  = isOpen ? 'none' : 'flex';
+        if (floatBtns) floatBtns.classList.toggle('cart-open', isOpen);
+        if (askAiBtn) askAiBtn.classList.toggle('cart-open', isOpen);
         if (cartDrawer.classList.contains('open')) {
             refreshCartDrawer();
         }
@@ -227,15 +231,48 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             container.innerHTML = data.items.map((item, idx) =>
                 '<div class="cart-item">' +
-                '<span class="cart-item-emoji">' + item.emoji + '</span>' +
+                (item.image_url
+                    ? '<img class="cart-item-image" src="' + item.image_url + '" alt="">'
+                    : '<span class="cart-item-emoji" aria-hidden="true">📦</span>') +
                 '<div class="cart-item-info">' +
                 '<h5>' + item.name + '</h5>' +
                 '<span>' + item.qty + ' × ' + item.unit + ' @ ₹' + item.unit_price + '</span>' +
                 '</div>' +
                 '<span class="cart-item-price">₹' + item.total + '</span>' +
+                '<div class="cart-quantity-controls" aria-label="Quantity controls">' +
+                '<button type="button" class="cart-qty-btn" data-index="' + idx + '" data-delta="-1" aria-label="Reduce quantity">−</button>' +
+                '<span class="cart-qty-value">' + item.qty + '</span>' +
+                '<button type="button" class="cart-qty-btn" data-index="' + idx + '" data-delta="1" aria-label="Increase quantity">+</button>' +
+                '</div>' +
                 '<button class="cart-item-remove" data-index="' + idx + '">🗑</button>' +
                 '</div>'
             ).join('');
+
+            container.querySelectorAll('.cart-qty-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index, 10);
+                    const delta = parseInt(this.dataset.delta, 10);
+                    container.querySelectorAll('.cart-qty-btn').forEach(control => control.disabled = true);
+
+                    fetch('/cart/update/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken()
+                        },
+                        body: JSON.stringify({ index, delta })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status !== 'ok') showToast(data.message || 'Unable to update quantity');
+                        refreshCartDrawer();
+                    })
+                    .catch(() => {
+                        showToast('Unable to update quantity');
+                        refreshCartDrawer();
+                    });
+                });
+            });
 
             container.querySelectorAll('.cart-item-remove').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -330,12 +367,26 @@ document.addEventListener("click", function (e) {
     }
 });
 
-document.getElementById("hamburger").onclick = function () {
-    const menu = document.getElementById("mobile-menu");
-    if (menu.style.display === "block") {
-        menu.style.display = "none";
-    } else {
-        menu.style.display = "block";
-    }
-};
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
 
+if (hamburger && mobileMenu) {
+    const closeMobileMenu = () => {
+        mobileMenu.classList.remove('active');
+        hamburger.setAttribute('aria-expanded', 'false');
+    };
+
+    hamburger.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = mobileMenu.classList.toggle('active');
+        hamburger.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+        if (mobileMenu.classList.contains('active') &&
+            !mobileMenu.contains(event.target) &&
+            !hamburger.contains(event.target)) {
+            closeMobileMenu();
+        }
+    });
+}

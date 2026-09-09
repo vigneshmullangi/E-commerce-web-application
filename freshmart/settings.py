@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'import_export',
     'store',
     'owner',
+    'chatbot',
 ]
 
 MIDDLEWARE = [
@@ -106,7 +107,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media_storage'
+MEDIA_ROOT = os.getenv(
+    'MEDIA_ROOT',
+    os.path.join(BASE_DIR, 'media')
+)
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -119,3 +123,7 @@ LOGIN_REDIRECT_URL = '/'
 CSRF_TRUSTED_ORIGINS = [
     'https://e-commerce-web-application-production-99e8.up.railway.app',
 ]
+
+
+from decouple import config
+GEMINI_API_KEY = config('GEMINI_API_KEY')

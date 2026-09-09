@@ -12,6 +12,7 @@ urlpatterns = [
     # ── Auth ──
     path('login/',  views.login_view,  name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('chatbot/', include('chatbot.urls')),
 
     # ── Main pages ──
     path('',          views.home_view,     name='home'),
@@ -21,6 +22,7 @@ urlpatterns = [
     # ── Cart ──
     path('cart/add/',    views.cart_add,    name='cart_add'),
     path('cart/remove/', views.cart_remove, name='cart_remove'),
+    path('cart/update/', views.cart_update, name='cart_update'),
     path('cart/get/',    views.cart_get,    name='cart_get'),
 
     # ── Order ──
